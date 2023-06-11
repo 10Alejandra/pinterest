@@ -51,7 +51,7 @@ public class User {
     private String names;
 
     @NotBlank(message = "Surname are required")
-    private String surname;
+    private String surnames;
 
     private String information;
 

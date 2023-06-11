@@ -37,7 +37,7 @@ public class Pin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String tittle;
+    private String title;
     private String description;
     private String urlImage;
     private String urlOwner;
@@ -47,13 +47,16 @@ public class Pin {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "pin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "pin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PinBoard> pinBoards = new ArrayList<>();
+
+    @OneToMany(mappedBy = "pin", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PinChildBoard> pinChildBoards = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
