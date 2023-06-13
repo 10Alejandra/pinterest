@@ -49,6 +49,11 @@ public class Pin {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean isActive = true;
+
+    private Long relationshipKey;
+
     @OneToMany(mappedBy = "pin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 

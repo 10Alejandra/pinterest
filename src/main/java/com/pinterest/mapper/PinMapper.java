@@ -1,5 +1,6 @@
 package com.pinterest.mapper;
 
+import com.pinterest.common.State;
 import com.pinterest.dto.pin.PinListResponseDTO;
 import com.pinterest.dto.pin.PinRequestDTO;
 import com.pinterest.dto.pin.PinResponseDTO;
@@ -20,6 +21,7 @@ public class PinMapper {
                 .urlImage(pinRequestDTO.getUrlImage())
                 .urlOwner(pinRequestDTO.getUrlOwner())
                 .user(user)
+                .isActive(Boolean.parseBoolean(State.ACTIVE.getValue()))
                 .build();
     }
 

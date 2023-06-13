@@ -11,6 +11,8 @@ import com.pinterest.mapper.PinMapper;
 import com.pinterest.model.Board;
 import com.pinterest.model.ChildBoard;
 import com.pinterest.model.Pin;
+import com.pinterest.model.PinBoard;
+import com.pinterest.model.PinChildBoard;
 import com.pinterest.model.User;
 import com.pinterest.repository.BoardRepository;
 import com.pinterest.repository.ChildBoardRepository;
@@ -66,13 +68,23 @@ public class PinService {
 
         Pin pin = pinRepository.save(pinMapper.toPin(pinRequestDTO, user.get()));
 
+        Long relationshipKey;
         if (Objects.nonNull(childBoard)) {
-             pinChildBoardRepository.save(pinChildBoardMapper.toPinChildBoard(pin, childBoard));
+             PinChildBoard pinChildBoard = pinChildBoardRepository.save(pinChildBoardMapper.toPinChildBoard(pin, childBoard));
+             relationshipKey = pinChildBoard.getId();
         } else {
-            pinBoardRepository.save(pinBoardMapper.toPinBoard(pin, board));
+            PinBoard pinBoard = pinBoardRepository.save(pinBoardMapper.toPinBoard(pin, board));
+            relationshipKey = pinBoard.getId();
         }
 
+        pinRepository.updateRelationshipKeyField(relationshipKey, pin.getId());
+
         return pinMapper.toPinResponseDTO(pin);
+    }
+
+    public void deletePinById(Long pinId) {
+        getPinById(pinId);
+        pinRepository.deleteById(pinId);
     }
 
     private Board validateBoard(Long boardId, Long userId) {
