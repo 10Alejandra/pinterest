@@ -20,4 +20,5 @@ public class CommentResponseDTO implements Serializable {
     private String updatedAt;
     private Long parentId;
     private Long pinId;
+
 }

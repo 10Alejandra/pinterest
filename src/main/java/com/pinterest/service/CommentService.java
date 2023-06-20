@@ -21,13 +21,12 @@ public class CommentService {
     private final PinRepository pinRepository;
     private final CommentMapper commentMapper;
 
-    public CommentResponseDTO getCommentById(Long commentId){
+    public Comment getCommentById(Long commentId){
         Optional<Comment> comment = commentRepository.findById(commentId);
         if (comment.isEmpty()){
             throw new ResourceNotFoundException("Comment with id=[" + commentId + "] not found");
         }
-        return commentMapper.toCommentResponseDTO(comment.get());
-
+        return comment.get();
     }
     public CommentResponseDTO createComment(CommentRequestDTO commentRequestDTO) {
         Optional<Pin> pin = pinRepository.findById(commentRequestDTO.getPinId());
@@ -46,12 +45,40 @@ public class CommentService {
         }
 
     }
+
+    public CommentResponseDTO updateComment(Long commentId, CommentRequestDTO toCommentUpdate) {
+        Optional<Pin> pin = pinRepository.findById(toCommentUpdate.getPinId());
+        Comment commentToUpdate = getCommentById(commentId);
+        if (pin.isEmpty()) {
+            throw new ResourceNotFoundException("Pin with id=[" + toCommentUpdate.getPinId() + "] not found");
+        }
+        commentToUpdate.setContent(toCommentUpdate.getContent());
+        Comment updatedComment = commentRepository.save(commentToUpdate);
+
+        return commentMapper.toCommentResponseDTO(updatedComment);
+    }
+
+    public void deleteCommentById(Long commentId) {
+        getCommentById(commentId);
+        commentRepository.deleteById(commentId);
+    }
+
     private Comment createParentComment(CommentRequestDTO commentRequestDTO, Pin pin ) {
         Comment comment = commentMapper.toComment(commentRequestDTO, pin, null);
         return commentRepository.save(comment);
     }
+
     private Comment createChildComment(CommentRequestDTO commentRequestDTO, Pin pin, Comment parentComment) {
+        if(parentComment.getParent() != null) {
+        Comment toParentComment = commentRepository.findById(parentComment.getParent().getId()).orElseThrow(() -> new
+                ResourceNotFoundException("Parent comment with id=[" + commentRequestDTO.getParenId() + "] not found"));
+        Comment comment = commentMapper.toComment(commentRequestDTO, pin, toParentComment);
+        return commentRepository.save(comment);
+
+        }
         Comment comment = commentMapper.toComment(commentRequestDTO, pin, parentComment);
         return commentRepository.save(comment);
+
     }
+
 }
