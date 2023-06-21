@@ -20,7 +20,6 @@ public class CommentMapper {
                 .parentId(Objects.nonNull(comment.getParent()) ? comment.getParent().getId() : null)
                 .pinId(comment.getPin().getId())
                 .build();
-
     }
 
     public Comment toComment(CommentRequestDTO commentRequestDTO, Pin pin, Comment comment) {
@@ -30,6 +29,5 @@ public class CommentMapper {
                 .parent(Objects.nonNull(comment) ? comment : null)
                 .build();
     }
-    
 
 }

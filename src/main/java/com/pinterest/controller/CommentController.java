@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/api/comments")
@@ -39,14 +38,12 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public ResponseEntity<CommentResponseDTO> updateComment(@PathVariable Long commentId,  @RequestBody CommentRequestDTO commentUpdate ) {
         CommentResponseDTO updateComment = commentService.updateComment(commentId, commentUpdate);
-        return new ResponseEntity<>(updateComment, HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(updateComment, HttpStatus.OK);
     }
     @DeleteMapping("/{commentId}")
     public ResponseEntity<String> deleteCommentById(@PathVariable("commentId") Long commentId) {
         commentService.deleteCommentById(commentId);
         return ResponseEntity.ok("Comment removed successfully");
     }
-
-
 
 }
