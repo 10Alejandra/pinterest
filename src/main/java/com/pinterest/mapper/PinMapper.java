@@ -14,11 +14,11 @@ import java.util.List;
 @Component
 public class PinMapper {
 
-    public Pin toPin(PinRequestDTO pinRequestDTO, User user) {
+    public Pin toPin(PinRequestDTO pinRequestDTO, User user, String urlImage) {
         return Pin.builder()
                 .title(pinRequestDTO.getTitle())
                 .description(pinRequestDTO.getDescription())
-                .urlImage(pinRequestDTO.getUrlImage())
+                .urlImage(urlImage)
                 .urlOwner(pinRequestDTO.getUrlOwner())
                 .user(user)
                 .isActive(Boolean.parseBoolean(State.ACTIVE.getValue()))

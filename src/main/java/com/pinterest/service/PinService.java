@@ -20,19 +20,26 @@ import com.pinterest.repository.PinBoardRepository;
 import com.pinterest.repository.PinChildBoardRepository;
 import com.pinterest.repository.PinRepository;
 import com.pinterest.repository.UserRepository;
+import com.pinterest.s3.S3Bucket;
+import com.pinterest.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PinService {
 
+    private final S3Service s3Service;
+    private final S3Bucket s3Bucket;
     private final PinRepository pinRepository;
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
@@ -57,7 +64,7 @@ public class PinService {
     }
 
     @Transactional
-    public PinResponseDTO createPin(PinRequestDTO pinRequestDTO) {
+    public PinResponseDTO createPin(PinRequestDTO pinRequestDTO, MultipartFile file) {
         Optional<User> user = userRepository.findById(pinRequestDTO.getUserId());
         if (user.isEmpty()) {
             throw new ResourceNotFoundException("User with id=[" + pinRequestDTO.getUserId() + "] not found");
@@ -66,7 +73,18 @@ public class PinService {
         Board board = validateBoard(pinRequestDTO.getBoardId(), user.get().getId());
         ChildBoard childBoard = validateChildBoard(pinRequestDTO.getChildBoardId(), board.getId());
 
-        Pin pin = pinRepository.save(pinMapper.toPin(pinRequestDTO, user.get()));
+        String pinImageId = UUID.randomUUID().toString();
+        try {
+            s3Service.putObject(
+                    s3Bucket.getPinterest(),
+                    "pins/" + pinImageId,
+                    file.getBytes()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("failed to upload pin image", e);
+        }
+
+        Pin pin = pinRepository.save(pinMapper.toPin(pinRequestDTO, user.get(), pinImageId));
 
         Long relationshipKey;
         if (Objects.nonNull(childBoard)) {
