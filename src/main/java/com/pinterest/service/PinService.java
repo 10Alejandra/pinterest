@@ -5,6 +5,7 @@ import com.pinterest.dto.pin.PinRequestDTO;
 import com.pinterest.dto.pin.PinResponseDTO;
 import com.pinterest.exception.ResourceNotAuthorizedException;
 import com.pinterest.exception.ResourceNotFoundException;
+import com.pinterest.exception.ResourceUploadException;
 import com.pinterest.mapper.PinBoardMapper;
 import com.pinterest.mapper.PinChildBoardMapper;
 import com.pinterest.mapper.PinMapper;
@@ -19,7 +20,6 @@ import com.pinterest.repository.ChildBoardRepository;
 import com.pinterest.repository.PinBoardRepository;
 import com.pinterest.repository.PinChildBoardRepository;
 import com.pinterest.repository.PinRepository;
-import com.pinterest.repository.UserRepository;
 import com.pinterest.s3.S3Bucket;
 import com.pinterest.s3.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,6 @@ public class PinService {
     private final S3Service s3Service;
     private final S3Bucket s3Bucket;
     private final PinRepository pinRepository;
-    private final UserRepository userRepository;
     private final BoardRepository boardRepository;
     private final PinBoardRepository pinBoardRepository;
     private final ChildBoardRepository childBoardRepository;
@@ -49,13 +48,15 @@ public class PinService {
     private final PinMapper pinMapper;
     private final PinBoardMapper pinBoardMapper;
     private final PinChildBoardMapper pinChildBoardMapper;
+    private final UserService userService;
+    private static final String NOT_FOUND_MESSAGE = " not found";
 
     public PinResponseDTO getPinById(Long pinId) {
-        Optional<Pin> pin = pinRepository.findById(pinId);
-        if (pin.isEmpty()) {
-            throw new ResourceNotFoundException("Pin with id=[" + pinId + "] not found");
-        }
-        return pinMapper.toPinResponseDTO(pin.get());
+        return pinMapper.toPinResponseDTO(getPinIdOrThrowException(pinId));
+    }
+    public Pin getPinIdOrThrowException (Long pinId) {
+        return pinRepository.findById(pinId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pin with id=[" + pinId + "]"+NOT_FOUND_MESSAGE));
     }
 
     public PinListResponseDTO getAllPins(Pageable pageable) {
@@ -65,12 +66,8 @@ public class PinService {
 
     @Transactional
     public PinResponseDTO createPin(PinRequestDTO pinRequestDTO, MultipartFile file) {
-        Optional<User> user = userRepository.findById(pinRequestDTO.getUserId());
-        if (user.isEmpty()) {
-            throw new ResourceNotFoundException("User with id=[" + pinRequestDTO.getUserId() + "] not found");
-        }
-
-        Board board = validateBoard(pinRequestDTO.getBoardId(), user.get().getId());
+        User user = userService.getUserByIdOrThrowException(pinRequestDTO.getUserId());
+        Board board = validateBoard(pinRequestDTO.getBoardId(), user.getId());
         ChildBoard childBoard = validateChildBoard(pinRequestDTO.getChildBoardId(), board.getId());
 
         String pinImageId = UUID.randomUUID().toString();
@@ -81,10 +78,10 @@ public class PinService {
                     file.getBytes()
             );
         } catch (IOException e) {
-            throw new RuntimeException("failed to upload pin image", e);
+            throw new ResourceUploadException("failed to upload pin image", e);
         }
 
-        Pin pin = pinRepository.save(pinMapper.toPin(pinRequestDTO, user.get(), pinImageId));
+        Pin pin = pinRepository.save(pinMapper.toPin(pinRequestDTO, user, pinImageId));
 
         Long relationshipKey;
         if (Objects.nonNull(childBoard)) {
@@ -106,16 +103,14 @@ public class PinService {
     }
 
     private Board validateBoard(Long boardId, Long userId) {
-        Optional<Board> board = boardRepository.findById(boardId);
-        if (board.isEmpty()) {
-            throw new ResourceNotFoundException("Board with id=[" + boardId + "] not found");
-        }
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new
+                ResourceNotFoundException("Board with id=[" + boardId + "]"+NOT_FOUND_MESSAGE));
 
-        if (!Objects.equals(board.get().getUser().getId(), userId)) {
+        if (!Objects.equals(board.getUser().getId(), userId)) {
             throw new ResourceNotAuthorizedException("You do not have permissions on this board");
         }
 
-        return board.get();
+        return board;
     }
 
     private ChildBoard validateChildBoard(Long childBoardId, Long boardId) {

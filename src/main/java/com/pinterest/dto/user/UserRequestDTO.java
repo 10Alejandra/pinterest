@@ -16,7 +16,7 @@ public class UserRequestDTO implements Serializable {
     private String email;
     private String urlImage;
     private String names;
-    private String surname;
+    private String surnames;
     private String information;
 
 }

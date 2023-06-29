@@ -1,11 +1,11 @@
 package com.pinterest.mapper;
 
+import com.pinterest.dto.user.UserRequestDTO;
 import com.pinterest.dto.user.UserResponseDTO;
 import com.pinterest.model.User;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 
 @Component
 @AllArgsConstructor
@@ -26,20 +26,16 @@ public class UserMapper {
                 .build();
     }
 
-    public User toUser(UserResponseDTO userResponseDTO) {
+    public User toUser(UserRequestDTO userRequestDTO) {
         return User.builder()
-                .id(userResponseDTO.getId())
-                .username(userResponseDTO.getUsername())
-                .password(userResponseDTO.getPassword())
-                .email(userResponseDTO.getEmail())
-                .urlImage(userResponseDTO.getUrlImage())
-                .names(userResponseDTO.getNames())
-                .surnames(userResponseDTO.getSurname())
-                .information(userResponseDTO.getInformation())
-                .createdAt(LocalDateTime.parse(userResponseDTO.getCreatedAt()))
-                .updateAt(LocalDateTime.parse(userResponseDTO.getUpdatedAt()))
+                .username(userRequestDTO.getUsername())
+                .password(userRequestDTO.getPassword())
+                .email(userRequestDTO.getEmail())
+                .urlImage(userRequestDTO.getUrlImage())
+                .names(userRequestDTO.getNames())
+                .surnames(userRequestDTO.getSurnames())
+                .information(userRequestDTO.getInformation())
                 .build();
     }
-
 
 }
